@@ -1,85 +1,89 @@
-
-# -*- coding: utf-8 -*-
-"""
-http://www.torrentino.me/torrents?tags=%D0%BA%D0%BD%D0%B8%D0%B3%D0%B0
-http://www.torrentino.me/torrents?page=834&tags=%D0%BA%D0%BD%D0%B8%D0%B3%D0%B0
-"""
-
+#библиотека для запросов
 import requests
 from bs4 import BeautifulSoup
-from random import choice
-import time
+from random import choice 
+import urllib.request
 
-from pymongo import MongoClient
-client = MongoClient()
-db = client.torrent_parser
-books = db.books
+userparsers = open('userparser.txt').read().split('\n')
 
-
-
-useragents = open('useragents.txt').read().split('\n')
-
-useragent = {'User-Agent' : choice(useragents)}
-
-def get_html (url, useragent=None, proxies = None):
-    """ get the html of pages"""
-    r = requests.get(url, headers = useragent, proxies = proxies)
+userparser = {'Userparser': choice(userparsers)}
+# полчуение html страницы
+def get_html (url, userparser=None, proxies=None):
+    r=requests.get(url,headers=userparser,proxies=None)
     return r.text
-
+#Получение всех страници
 def get_total_pages(html):
-    """get total pages"""
-    soup = BeautifulSoup(html, 'lxml')
-    pages = soup.find('ul', class_='pagination').find_all('a')[-2].get('href')
-    total_pages = pages.split('=')[1].split('&')[0]
-    return total_pages
-
+    soup = BeautifulSoup(html,'lxml')
+    pages = soup.find('div', class_='G1acv' ).find_all('a')[-1].get('href')
+    result='https://v1.ru/'+ pages 
+    return result
 def get_page_data(html):
-    """get the page data"""
+   
     soup = BeautifulSoup(html, 'lxml')
-    items = soup.find('div', class_='inner-columns-wrapper').find_all('div', class_='central-right-wrapper-')
-    
+    items = soup.find('div', class_='BXer').find_all('article', class_='MJaz5')
     for c, item in enumerate(items, 1):
-        time.sleep(1)
+        #time.sleep(1)
         try:
-            title = item.find('', class_='name').find('a').get('title')
-            date = item.find('', class_='').get_text()
-            url = item.find('', class_='name').find('a').get('href')
-            text = item.find('', class_='').find('a').get('')
-            countView = item.find('', class_='').get_text()
-            countComment = item.find('', class_='').get_text()
-            
-            try:
-                description_soup = BeautifulSoup(get_html(url, useragent), 'lxml')
-                description =  description_soup.find('div', class_='plate description').get_text()
-            except:
-                description = ''
-#                .sort([('score', {'$meta': 'textScore'})])
+            title = item.find('div', class_='MJaz7').find('a').get('title')
+            url = item.find('div', class_='MJaz7').find('a').get('href') 
+            datetimes = item.find('div', class_='MJlr').find('time').get('datetime')
+            count_view = item.find('div', class_='LVaxt').find('span').get_text()
+            #проверка на наличие комментариев
+            if item.find('a', class_='LVcp LVbn') != None:
+                count_comment = item.find('a', class_='LVcp LVbn').find('span', class_='LVcl').get_text()
+            else: 
+                count_comment = None
+            #проверка на наличие видео
+            #iFrames=[] # qucik bs4 example
+            #for iframe in soup("iframe"):
+               #iFrames.append(soup.iframe.extract())
+
+            if BeautifulSoup(get_html('https:/'+'/v1.ru/'+ url), 'lxml').find('div', class_='ERsn') != None:
+                video = BeautifulSoup(get_html('https:/'+'/v1.ru/'+ url), 'lxml').find('iframe')
+            else: 
+                video = None
+            #достаем полностью текст 
+            text_url=''
+            for i in BeautifulSoup(get_html('https:/'+'/v1.ru/'+ url), 'lxml').find_all('div', class_='LPawp'):
+                for j in i.find_all('p'):
+                    text_url+=j.get_text()
             i = {
                     'title' : title,
-                    'date' : url,
-                    'url' : url,
-                    'text' : text,
-                    'countView' : countView,
-                    'countComment' : countComment
-                    }
-            books.insert_one(i)
-            
-            print('{} - inserted with size: {}'.format(c, size))
+                    'url': url,
+                    'text': text_url,
+                    'datetime' : datetimes,
+                    'count_comment': count_comment,
+                    'count_view': count_view           
+                 }
+            print("Ссылка на видео:",video)
+            print("Количество просмотров:" + count_view)
+            print("Количество комментариев:", count_comment)
+            print("Текст записи:"+ text_url)
+            print("Название новости:"+title)
+            print("Дата публикации:"+ datetimes)
+            print('https:/'+'/v1.ru/'+ url)
         except Exception as e:
-            print('EXCEPT {} with size: {}\n {}'.format(c, size, e))
+            #Выводит ошибку
+            print(e)
+            print('EXCEPT {} \n'.format(c,e))
             continue
 
-url = 'https://v1.ru/'
-base_url = 'https://v1.ru/text/gorod/69306460/'
-page_part = 'page='
-query_part = '&tags=%D0%BA%D0%BD%D0%B8%D0%B3%D0%B0'
 
-total_pages = 100 #get_total_pages(get_html(url, useragent))
+url = 'https://v1.ru/'
+base_url = 'https://v1.ru/text/?'
+page_part = 'page='
+
+
+total_pages = 1 
 
 for i in range(1, int(total_pages)+1):
-    url_gen = base_url + page_part + str(i) + query_part
-    html = get_html(url_gen, useragent)
+    url_gen = base_url + page_part + str(i) 
+    html = get_html(url_gen, userparser)
     get_page_data(html)
-    
+
+
+
+
+
 
 
