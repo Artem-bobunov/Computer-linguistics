@@ -5,10 +5,11 @@ from random import choice
 import urllib.request
 from pymongo import MongoClient
 client = MongoClient()
-db = client.parserCL
+db = client.parserCLV1ru
 parser = db.parser
-#for parser in parser.find():
+
 userparsers = open('userparser.txt').read().split('\n')
+
 
 userparser = {'Userparser': choice(userparsers)}
 # полчуение html страницы
@@ -18,53 +19,53 @@ def get_html (url, userparser=None, proxies=None):
 #Получение всех страници
 def get_total_pages(html):
     soup = BeautifulSoup(html,'lxml')
-    pages = soup.find('div', class_='G1acv' ).find_all('a')[-1].get('href')
+    pages = soup.find('div', class_='K9avx' ).find_all('a')[-1].get('href')
     result='https://v1.ru/'+ pages 
     return result
 def get_page_data(html):
    
     soup = BeautifulSoup(html, 'lxml')
-    items = soup.find('div', class_='BXer').find_all('article', class_='MJaz5')
+    items = soup.find('div', class_='BTed').find_all('article', class_='JBap1')
     for c, item in enumerate(items, 1):
         #time.sleep(1)
         try:
-            title = item.find('div', class_='MJaz7').find('a').get('title')
-            url = "https:/"+"/v1.ru/"+item.find('div', class_='MJaz7').find('a').get('href') 
-            datetimes = item.find('div', class_='MJlr').find('time').get('datetime')
-            count_view = item.find('div', class_='LVaxt').find('span').get_text()
+            title = item.find('div', class_='JBap3').find('a').get('title')
+            url = "https://v1.ru/"+item.find('div', class_='JBap3').find('a').get('href') 
+            datetimes = item.find('div', class_='JBadj').find('time').get('datetime')
+            count_view = item.find('div', class_='IJam-').find('span').get_text()
             #проверка на наличие комментариев
-            if item.find('a', class_='LVcp LVbn') != None:
-                count_comment = item.find('a', class_='LVcp LVbn').find('span', class_='LVcl').get_text()
+            if item.find('a', class_='IJb9 IJbx') != None:
+                count_comment = item.find('a', class_='IJb9 IJbx').find('span', class_='IJd-').get_text()
             else: 
                 count_comment = None
-            
 
-            if BeautifulSoup(get_html(url), 'lxml').find('div', class_='ERsn') != None:
-                video = BeautifulSoup(get_html(url), 'lxml').find('iframe')
+            if BeautifulSoup(get_html( url), 'lxml').find('div', class_='FHaat') != None:
+                video = BeautifulSoup(get_html( url), 'lxml').find('iframe')
             else: 
                 video = None
             #достаем полностью текст 
-            text_url=''
-            for i in BeautifulSoup(get_html(url), 'lxml').find_all('div', class_='LPawp'):
+   
+            text_url = ''
+            for i in BeautifulSoup(get_html(url),'lxml').find_all('div', class_='IBal1'):
                 for j in i.find_all('p'):
-                    text_url+=j.get_text()
+                    text_url += j.get_text()
             i = {
                     'title' : title,
                     'url': url,
                     'text': text_url,
                     'datetime' : datetimes,
                     'count_comment': count_comment,
-                    'count_view': count_view           
-                 }
-            parser.insert_one(i)
-
-            print("Ссылка на видео:",video)
+                    'count_view': count_view,
+                    'video': video
+                  }
+            n=parser.insert_one(i)
+            print("Название новости:"+title)
             print("Количество просмотров:" + count_view)
             print("Количество комментариев:", count_comment)
-            print("Текст записи:"+ text_url)
-            print("Название новости:"+title)
+            print("Ссылка на видео:",video)
             print("Дата публикации:"+ datetimes)
-            print("Ссылка"+ url)
+            print( url)
+            print("Текст записи:" + text_url)
         except Exception as e:
             #Выводит ошибку
             print(e)
@@ -77,7 +78,7 @@ base_url = 'https://v1.ru/text/?'
 page_part = 'page='
 
 
-total_pages = 1 
+total_pages = 40 
 
 for i in range(1, int(total_pages)+1):
     url_gen = base_url + page_part + str(i) 
