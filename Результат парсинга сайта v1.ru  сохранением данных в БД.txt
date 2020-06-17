@@ -19,34 +19,34 @@ def get_html (url, userparser=None, proxies=None):
 #Получение всех страници
 def get_total_pages(html):
     soup = BeautifulSoup(html,'lxml')
-    pages = soup.find('div', class_='K9avx' ).find_all('a')[-1].get('href')
+    pages = soup.find('div', class_='G-adf' ).find_all('a')[-1].get('href')
     result='https://v1.ru/'+ pages 
     return result
 def get_page_data(html):
    
     soup = BeautifulSoup(html, 'lxml')
-    items = soup.find('div', class_='BTed').find_all('article', class_='JBap1')
+    items = soup.find('div', class_='BXeh').find_all('article', class_='MDazb')
     for c, item in enumerate(items, 1):
         #time.sleep(1)
         try:
-            title = item.find('div', class_='JBap3').find('a').get('title')
-            url = "https://v1.ru/"+item.find('div', class_='JBap3').find('a').get('href') 
-            datetimes = item.find('div', class_='JBadj').find('time').get('datetime')
-            count_view = item.find('div', class_='IJam-').find('span').get_text()
+            title = item.find('div', class_='MDazd').find('a').get('title')
+            url = "https://v1.ru/" + item.find('div', class_='MDazd').find('a').get('href') 
+            datetimes = item.find('div', class_='MDtv').find('time').get('datetime')
+            count_view = item.find('div', class_='LPaw1').find('span').get_text()
             #проверка на наличие комментариев
-            if item.find('a', class_='IJb9 IJbx') != None:
-                count_comment = item.find('a', class_='IJb9 IJbx').find('span', class_='IJd-').get_text()
+            if item.find('a', class_='LPcl LPeb') != None:
+                count_comment = item.find('a', class_='LPcl LPeb').find('span', class_='LPbx').get_text()
             else: 
                 count_comment = None
 
-            if BeautifulSoup(get_html( url), 'lxml').find('div', class_='FHaat') != None:
-                video = BeautifulSoup(get_html( url), 'lxml').find('iframe')
+            if BeautifulSoup(get_html( url), 'lxml').find('div', class_='F1zp') != None:
+                video = BeautifulSoup(get_html( url), 'lxml').find('iframe').get('src')
             else: 
                 video = None
             #достаем полностью текст 
    
             text_url = ''
-            for i in BeautifulSoup(get_html(url),'lxml').find_all('div', class_='IBal1'):
+            for i in BeautifulSoup(get_html(url),'lxml').find_all('div', class_='LFavj'):
                 for j in i.find_all('p'):
                     text_url += j.get_text()
             i = {
@@ -84,6 +84,7 @@ for i in range(1, int(total_pages)+1):
     url_gen = base_url + page_part + str(i) 
     html = get_html(url_gen, userparser)
     get_page_data(html)
+
 
 
 
